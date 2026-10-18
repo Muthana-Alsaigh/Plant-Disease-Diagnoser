@@ -7,7 +7,10 @@ authors = [
     { name = "Muthana-Alsaigh", email = "mothanasyagh@gmail.com" }
 ]
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "numpy>=2.5.4",
+    "pandas>=3.0.6",
+]
 
 [project.scripts]
 plant-disease-diagnosis = "plant_disease_diagnosis:main"
