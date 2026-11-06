@@ -17,9 +17,7 @@ ROOT = Path(__file__).resolve().parents[1] # Path(__file__): Corrent file ath ob
 DATA, REPORTS, MODELS = ROOT / "data", ROOT / "reports", ROOT / "models"  # path objects concats with '/'
 
 # Existing dataset directory
-DATASET_DIR = Path(
-        str(DATA / "Plant_leave_diseases_dataset_without_augmentation")
-).expanduser().resolve()
+DATASET_DIR = Path(str(DATA / "Plant_leave_diseases_dataset_without_augmentation")).expanduser().resolve()
 
 
 MANIFESTS = DATA / "manifests"
@@ -151,9 +149,61 @@ def gate(condition: bool, message: str) -> None:
 # ============================================================
 # DATASET DISCOVERY
 # ============================================================
-def get_class_names(
-    dataset_dir: Path = DATASET_DIR,
-) -> list[str]:
+
+def parse_class_name(class_name: str) -> tuple[str, str]:
+    """
+    Parse an original PlantVillage folder name.
+
+    Example:
+        Potato___Early_blight
+        -> ("Potato", "Early_blight")
+    """
+
+    if "___" not in class_name:
+        raise ValueError(
+            f"Invalid class folder name: {class_name}"
+        )
+
+    plant_type, disease = class_name.split("___", 1)
+
+    if not plant_type or not disease:
+        raise ValueError(
+            f"Invalid class folder name: {class_name}"
+        )
+
+    return plant_type, disease
+
+
+def get_plant_types(dataset_dir: Path = DATASET_DIR) -> list[str]:
+
+    class_names = get_class_names(dataset_dir)
+
+    plant_types = {
+        parse_class_name(class_name)[0]
+        for class_name in class_names
+    }
+
+    return sorted(plant_types)
+
+
+def get_diseases_by_plant(dataset_dir: Path = DATASET_DIR) -> dict[str, list[str]]:
+
+    class_names = get_class_names(dataset_dir)
+
+    diseases = {}
+
+    for class_name in class_names:
+        plant_type, disease = parse_class_name(class_name)
+
+        diseases.setdefault(plant_type, []).append(disease)
+
+    return {
+        plant: sorted(set(plant_diseases))
+        for plant, plant_diseases in sorted(diseases.items())
+    }
+
+
+def get_class_names(dataset_dir: Path = DATASET_DIR) -> list[str]:
     """
     Discover class names from the dataset directory.
 
@@ -179,9 +229,7 @@ def get_class_names(
     return class_names
 
 
-def get_class_mapping(
-    class_names: list[str] | None = None,
-) -> dict[str, int]:
+def get_class_mapping(class_names: list[str] | None = None) -> dict[str, int]:
     """
     Generate a deterministic mapping from class names to integer labels.
     """
@@ -195,9 +243,7 @@ def get_class_mapping(
     }
 
 
-def get_reverse_class_mapping(
-    class_mapping: dict[str, int],
-) -> dict[int, str]:
+def get_reverse_class_mapping(class_mapping: dict[str, int]) -> dict[int, str]:
     """
     Generate the reverse mapping from integer labels to class names.
     """
@@ -208,10 +254,7 @@ def get_reverse_class_mapping(
     }
 
 
-def save_class_mapping(
-    class_mapping: dict[str, int],
-    path: Path | None = None,
-) -> Path:
+def save_class_mapping(class_mapping: dict[str, int], path: Path | None = None) -> Path:
     """
     Save the class mapping used during model training.
     """
@@ -227,9 +270,7 @@ def save_class_mapping(
     return path
 
 
-def load_class_mapping(
-    path: Path | None = None,
-) -> dict[str, int]:
+def load_class_mapping(path: Path | None = None) -> dict[str, int]:
     """
     Load the saved class mapping.
 
@@ -248,55 +289,103 @@ def load_class_mapping(
         return json.load(file)
 
 
+def get_plant_mapping(dataset_dir: Path = DATASET_DIR) -> dict[str, int]:
+
+    return {
+        plant: idx
+        for idx, plant in enumerate(
+            get_plant_types(dataset_dir)
+        )
+    }
+
+
+def get_reverse_plant_mapping(dataset_dir: Path = DATASET_DIR) -> dict[int, str]:
+
+    return {
+        idx: plant
+        for plant, idx in get_plant_mapping(dataset_dir).items()
+    }
+
+
+def get_class_plant_mapping(dataset_dir: Path = DATASET_DIR) -> dict[int, int]:
+
+    class_mapping = get_class_mapping(dataset_dir)
+    plant_mapping = get_plant_mapping(dataset_dir)
+
+    result = {}
+
+    for class_name, class_id in class_mapping.items():
+        plant_type, _ = parse_class_name(class_name)
+
+        result[class_id] = plant_mapping[plant_type]
+
+    return result
+
+
 # ============================================================
 # IMAGE FILE DISCOVERY
 # ============================================================
 
-def discover_images(
-    dataset_dir: Path = DATASET_DIR,
-) -> list[dict[str, Any]]:
-    """
-    Discover image files and their corresponding class labels.
 
-    Returns:
-        [
-            {
-                "path": "/path/to/image.jpg",
-                "class_name": "Apple___Apple_scab",
-                "label": 0
-            },
-            ...
-        ]
+def discover_images(dataset_dir: Path = DATASET_DIR) -> list[dict[str, Any]]:
+    """
+    Discover all images and extract their metadata.
+
+    Each record contains:
+        path        : Absolute image path
+        class_name  : Original combined class name
+        class_id    : Integer ID of the combined class
+        plant_type  : Plant species
+        plant_id    : Integer ID of the plant species
+        disease     : Disease or healthy label
     """
 
+    dataset_dir = Path(dataset_dir).expanduser().resolve()
+
+    gate(
+        dataset_dir.exists() and dataset_dir.is_dir(),
+        f"Dataset directory does not exist or is not a directory: {dataset_dir}"
+    )
+
+    # Retrieve deterministic mappings
     class_names = get_class_names(dataset_dir)
     class_mapping = get_class_mapping(class_names)
+    plant_mapping = get_plant_mapping(dataset_dir)
 
     records = []
 
     for class_name in class_names:
 
-        class_directory = dataset_dir / class_name
+        # Extract plant and disease information
+        plant_type, disease = parse_class_name(class_name)
 
-        for image_path in sorted(class_directory.rglob("*")):
+        class_dir = dataset_dir / class_name
 
-            if (
-                image_path.is_file()
-                and image_path.suffix.lower() in IMAGE_EXTENSIONS
-            ):
+        # Discover supported image files
+        image_paths = sorted(
+            path
+            for path in class_dir.rglob("*")
+            if path.is_file()
+            and path.suffix.lower() in IMAGE_EXTENSIONS
+        )
 
-                records.append({
-                    "path": str(image_path.resolve()),
-                    "class_name": class_name,
-                    "label": class_mapping[class_name],
-                })
+        for image_path in image_paths:
+            records.append({
+                "path": str(image_path.resolve()),
+                "class_name": class_name,
+                "class_id": class_mapping[class_name],
+                "plant_type": plant_type,
+                "plant_id": plant_mapping[plant_type],
+                "disease": disease,
+            })
 
     gate(
         len(records) > 0,
-        "No supported image files were found in the dataset."
+        f"No supported images found in: {dataset_dir}"
     )
 
     return records
+
 
 # ============================================================
 # FILE FINGERPRINTING
