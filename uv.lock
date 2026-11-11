@@ -1593,6 +1593,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "scikit-learn" },
     { name = "tensorflow" },
+    { name = "tqdm" },
 ]
 
 [package.metadata]
@@ -1605,6 +1606,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.14.2" },
     { name = "scikit-learn", specifier = ">=1.9.1" },
     { name = "tensorflow", specifier = ">=2.22.0rc0" },
+    { name = "tqdm", specifier = ">=4.70.1" },
 ]
 
 [[package]]

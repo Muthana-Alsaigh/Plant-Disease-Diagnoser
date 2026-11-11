@@ -1,6 +1,7 @@
 
 from pathlib import Path
 from typing import Literal
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -66,3 +67,20 @@ class ManifestRecord(ImageRecord):
     phash: str
     duplicate_group_id: str
     split: Literal["train", "validation", "test"]
+
+
+class InventoryRecord(ImageRecord):
+    """Complete inventory entry for a discovered image."""
+
+    source: str = "PlantVillage"
+
+    width: int | None = Field(default=None, gt=0)
+    height: int | None = Field(default=None, gt=0)
+    format: str | None = None
+
+    file_size_bytes: int | None = Field(default=None, ge=0)
+
+    is_valid: bool
+    validation_error: str | None = None
+
+    ingested_at: datetime
