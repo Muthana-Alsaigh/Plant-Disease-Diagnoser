@@ -9,9 +9,12 @@ authors = [
 requires-python = ">=3.14"
 dependencies = [
     "dvc>=3.67.1",
+    "imagehash>=4.3.2",
     "numpy>=2.5.4",
     "pandas>=3.0.6",
+    "pillow>=13.0.0",
     "pydantic>=2.14.2",
+    "scikit-learn>=1.9.1",
     "tensorflow>=2.22.0rc0",
 ]
 
