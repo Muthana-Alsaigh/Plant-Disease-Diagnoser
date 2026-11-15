@@ -20,11 +20,7 @@ from tqdm import tqdm
 
 from common import REPORTS, discover_images
 from schemas import ImageRecord, ImageValidationResult, InventoryRecord
-from validate import (
-    validate_dataset,
-    validate_result_coverage,
-    validate_inventory_completeness,
-)
+from validate import validate_dataset, validate_result_coverage, validate_inventory_completeness
 
 
 # ---------------------------------------------------------------------

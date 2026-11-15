@@ -22,9 +22,7 @@ from schemas import (
 # 1. IMAGE VALIDATION
 # -------------------------------------------------------------------
 
-def validate_image(
-    record: ImageRecord,
-) -> ImageValidationResult:
+def validate_image(record: ImageRecord) -> ImageValidationResult:
     """
     Validate image readability, decoding, and dimensions.
 
@@ -75,11 +73,7 @@ def validate_image(
                 format=image_format,
             )
 
-    except (
-        OSError,
-        ValueError,
-        UnidentifiedImageError,
-    ) as exc:
+    except (OSError, ValueError, UnidentifiedImageError) as exc:
 
         return ImageValidationResult(
             path=image_path,
@@ -92,9 +86,7 @@ def validate_image(
 # 2. DATASET VALIDATION
 # -------------------------------------------------------------------
 
-def validate_dataset(
-    records: list[ImageRecord],
-) -> tuple[list[ImageRecord], list[ImageValidationResult]]:
+def validate_dataset(records: list[ImageRecord]) -> tuple[list[ImageRecord], list[ImageValidationResult]]:
     """Validate all discovered images."""
 
     valid_records = []
@@ -152,25 +144,19 @@ def validate_result_coverage(
 # 4. INVENTORY VALIDATION
 # -------------------------------------------------------------------
 
-def validate_inventory_completeness(
-    records: list[ImageRecord],
-    inventory_paths: list[str],
-) -> None:
+def validate_inventory_completeness(records: list[ImageRecord], inventory_paths: list[str]) -> None:
     """Ensure every discovered image appears exactly once in inventory."""
 
     discovered_paths = {
-        str(Path(record.path).resolve())
-        for record in records
+        str(Path(record.path).resolve()) for record in records
     }
 
     normalized_inventory_paths = [
-        str(Path(path).resolve())
-        for path in inventory_paths
+        str(Path(path).resolve()) for path in inventory_paths
     ]
 
     gate(
-        len(normalized_inventory_paths)
-        == len(set(normalized_inventory_paths)),
+        len(normalized_inventory_paths) == len(set(normalized_inventory_paths)),
         "Duplicate paths found in inventory.",
     )
 

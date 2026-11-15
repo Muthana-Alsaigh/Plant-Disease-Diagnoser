@@ -6,7 +6,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
-class ImageRecord(BaseModel):
+class   ImageRecord(BaseModel):
     """Metadata for a discovered dataset image."""
 
     model_config = ConfigDict(extra="forbid")

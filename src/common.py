@@ -39,17 +39,9 @@ CONFIGS = ROOT / "configs"
 
 # Create project directories if they don't exist.
 PROJECT_DIRECTORIES = [
-    MANIFESTS,
-    PROCESSED_DATA,
-    GATES,
-    METRICS,
-    PLOTS,
-    COMPARISON_REPORTS,
-    CHECKPOINTS,
-    SAVED_MODELS,
-    TFLITE_MODELS,
-    NOTEBOOKS,
-    CONFIGS,
+    MANIFESTS, PROCESSED_DATA, GATES,
+    METRICS, PLOTS, COMPARISON_REPORTS, CHECKPOINTS, 
+    SAVED_MODELS, TFLITE_MODELS, NOTEBOOKS, CONFIGS,
 ]
 
 for directory in PROJECT_DIRECTORIES:
@@ -70,7 +62,7 @@ def set_seed(seed: int = SEED) -> None:
 
     tf.keras.utils.set_random_seed(seed)
 
-    try:
+    try: # if its posible makes all operations determinant so outcomes do not varies between outcomes
         tf.config.experimental.enable_op_determinism()
     except (AttributeError, RuntimeError):
         pass
@@ -103,11 +95,7 @@ TRAIN_RATIO = 0.70
 VALIDATION_RATIO = 0.15
 TEST_RATIO = 0.15
 
-SUPPORTED_SPLIT_NAMES = {
-    "train",
-    "validation",
-    "test",
-}
+SUPPORTED_SPLIT_NAMES = {"train", "validation", "test"}
 
 
 # ============================================================
@@ -401,13 +389,11 @@ def sha256_file(path: Path) -> str:
 
     with open(path, "rb") as file:
 
-        for chunk in iter(
-            lambda: file.read(1024 * 1024),
-            b""
-        ):
+        for chunk in iter(lambda: file.read(1024 * 1024), b""):
             digest.update(chunk)
 
     return digest.hexdigest()
+
 
 # ============================================================
 # 11. JSON UTILITIES
