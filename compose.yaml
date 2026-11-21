@@ -1,0 +1,20 @@
+services:
+  ml-pipeline:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+
+    container_name: plant-disease-pipeline
+
+    volumes:
+      - ./data:/app/data:ro
+      - ./reports:/app/reports
+      - ./models:/app/models
+
+    environment:
+      PYTHONPATH: /app/src
+      TF_CPP_MIN_LOG_LEVEL: "2"
+
+    working_dir: /app
+
+    command: ["uv", "run", "python", "src/ingest.py"]

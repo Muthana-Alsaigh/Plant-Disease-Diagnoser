@@ -6,7 +6,7 @@ readme = "README.md"
 authors = [
     { name = "Muthana-Alsaigh", email = "mothanasyagh@gmail.com" }
 ]
-requires-python = ">=3.14"
+requires-python = ">=3.14,<3.15"
 dependencies = [
     "dvc>=3.67.1",
     "imagehash>=4.3.2",
