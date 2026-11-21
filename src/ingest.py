@@ -231,17 +231,10 @@ def run_ingestion() -> tuple[pd.DataFrame, list[ImageRecord]]:
     invalid_df = save_invalid_images(inventory_df)
 
     # 7. Validate inventory completeness
-    validate_inventory_completeness(
-        records,
-        inventory_df["path"].tolist(),
-    )
+    validate_inventory_completeness(records,inventory_df["path"].tolist())
 
     # 8. Print summary
-    print_ingestion_summary(
-        inventory_df,
-        valid_records,
-        invalid_df,
-    )
+    print_ingestion_summary(inventory_df, valid_records, invalid_df)
 
     print("\nDataset ingestion completed successfully.")
 
